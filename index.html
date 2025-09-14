@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Plant Data App</title>
+    <!-- Tailwind CSS CDN for modern, responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font for a clean look -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        /* Custom styles for nav buttons */
+        .nav-button-active {
+            background-color: #3b82f6; /* Blue-500 */
+            color: white;
+        }
+        .nav-button-inactive {
+            background-color: #d1d5db; /* Gray-300 */
+            color: #1f2937; /* Gray-800 */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+
+    <!-- Main Container -->
+    <div id="app-container" class="bg-white rounded-xl shadow-lg w-full max-w-4xl p-8">
+        <!-- Login Page (initial view) -->
+        <div id="login-page" class="flex flex-col items-center">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6">Login</h1>
+            <div class="w-full max-w-sm">
+                <div class="mb-4">
+                    <label for="username" class="block text-gray-700 font-semibold mb-2">Username</label>
+                    <input type="text" id="username" class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
+                </div>
+                <div class="mb-6">
+                    <label for="password" class="block text-gray-700 font-semibold mb-2">Password</label>
+                    <input type="password" id="password" class="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
+                </div>
+                <button id="login-button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 shadow-md">Login</button>
+            </div>
+            <p id="error-message" class="text-red-500 mt-4 hidden">Invalid username or password.</p>
+        </div>
+
+        <!-- Dashboard Page (after login) -->
+        <div id="dashboard-page" class="hidden">
+            <header class="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
+                <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
+                <div class="flex items-center space-x-4">
+                    <span id="user-greeting" class="text-lg text-gray-600"></span>
+                    <button id="logout-button" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 shadow-sm">Logout</button>
+                </div>
+            </header>
+            
+            <!-- Navigation -->
+            <div class="flex flex-wrap space-x-2 md:space-x-4 mb-8">
+                <button id="nav-dg-data" class="nav-button nav-button-active px-4 py-2 rounded-lg transition duration-200 shadow-sm">DG Data Entry</button>
+                <button id="nav-css-data" class="nav-button nav-button-inactive px-4 py-2 rounded-lg transition duration-200 shadow-sm">CSS Data Entry</button>
+                <button id="nav-battery-voltage" class="nav-button nav-button-inactive px-4 py-2 rounded-lg transition duration-200 shadow-sm">Battery Voltage</button>
+                <button id="nav-reports" class="nav-button nav-button-inactive px-4 py-2 rounded-lg transition duration-200 shadow-sm">Reports</button>
+                <button id="nav-user-management" class="nav-button nav-button-inactive px-4 py-2 rounded-lg transition duration-200 shadow-sm admin-only hidden">User Management</button>
+            </div>
+
+            <!-- Content Areas -->
+            <div id="content-area">
+                <!-- DG Data Entry Form -->
+                <div id="dg-data-entry-form" class="content-section">
+                    <h2 class="text-xl font-bold text-gray-700 mb-4">Diesel Generator Data Log</h2>
+                    <form id="dg-data-form" class="space-y-4">
+                        <!-- Date and Time fields -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="dg-date" class="block font-semibold mb-2 text-gray-700">Date</label>
+                                <input type="date" id="dg-date" class="w-full p-3 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="dg-time" class="block font-semibold mb-2 text-gray-700">Time</label>
+                                <input type="time" id="dg-time" class="w-full p-3 rounded-lg border border-gray-300">
+                            </div>
+                        </div>
+
+                        <!-- Generator Selection -->
+                        <div>
+                            <label for="dg-generator-select" class="block font-semibold mb-2 text-gray-700">Generator Number</label>
+                            <select id="dg-generator-select" class="w-full p-3 rounded-lg border border-gray-300">
+                                <!-- Options populated by JavaScript -->
+                            </select>
+                        </div>
+                        
+                        <!-- Generic form fields for DG -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div>
+                                <label for="dg-load" class="block text-gray-700 text-sm font-medium mb-1">Load (kW)</label>
+                                <input type="number" id="dg-load" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="dg-voltage" class="block text-gray-700 text-sm font-medium mb-1">Voltage (V)</label>
+                                <input type="number" id="dg-voltage" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="dg-current" class="block text-gray-700 text-sm font-medium mb-1">Current (A)</label>
+                                <input type="number" id="dg-current" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="dg-frequency" class="block text-gray-700 text-sm font-medium mb-1">Frequency (Hz)</label>
+                                <input type="number" id="dg-frequency" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="dg-power-factor" class="block text-gray-700 text-sm font-medium mb-1">Power Factor</label>
+                                <input type="number" id="dg-power-factor" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="dg-energy" class="block text-gray-700 text-sm font-medium mb-1">Energy Generated (kWh)</label>
+                                <input type="number" id="dg-energy" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="dg-running-hours" class="block text-gray-700 text-sm font-medium mb-1">Running Hours</label>
+                                <input type="number" id="dg-running-hours" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="dg-fuel-level" class="block text-gray-700 text-sm font-medium mb-1">Fuel Level (%)</label>
+                                <input type="number" id="dg-fuel-level" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="dg-oil-temp" class="block text-gray-700 text-sm font-medium mb-1">Oil Temp (°C)</label>
+                                <input type="number" id="dg-oil-temp" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="dg-coolant-temp" class="block text-gray-700 text-sm font-medium mb-1">Coolant Temp (°C)</label>
+                                <input type="number" id="dg-coolant-temp" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label for="dg-remarks" class="block text-gray-700 text-sm font-medium mb-1">Remarks</label>
+                                <textarea id="dg-remarks" rows="3" class="w-full p-2 rounded-lg border border-gray-300"></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200 shadow-md">Submit DG Data</button>
+                        </div>
+                    </form>
+                    <p id="message-dg-data-entry" class="text-green-500 mt-4 hidden">DG data submitted successfully!</p>
+                </div>
+                
+                <!-- CSS Data Entry Form -->
+                <div id="css-data-entry-form" class="content-section hidden">
+                    <h2 class="text-xl font-bold text-gray-700 mb-4">Containerized Sub Station Data Log</h2>
+                    <form id="css-data-form" class="space-y-4">
+                        <!-- Date and Time fields -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="css-date" class="block font-semibold mb-2 text-gray-700">Date</label>
+                                <input type="date" id="css-date" class="w-full p-3 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="css-time" class="block font-semibold mb-2 text-gray-700">Time</label>
+                                <input type="time" id="css-time" class="w-full p-3 rounded-lg border border-gray-300">
+                            </div>
+                        </div>
+
+                        <!-- CSS Station Selection -->
+                        <div>
+                            <label for="css-station-select" class="block font-semibold mb-2 text-gray-700">Sub Station Number</label>
+                            <select id="css-station-select" class="w-full p-3 rounded-lg border border-gray-300">
+                                <!-- Options populated by JavaScript -->
+                            </select>
+                        </div>
+                        
+                        <!-- Form fields for CSS, as per the log sheet -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div>
+                                <label for="css-load" class="block text-gray-700 text-sm font-medium mb-1">Load (kW)</label>
+                                <input type="number" id="css-load" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="css-power-factor" class="block text-gray-700 text-sm font-medium mb-1">Power Factor</label>
+                                <input type="number" id="css-power-factor" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div>
+                                    <label for="css-voltage-l1l2" class="block text-gray-700 text-sm font-medium mb-1">Voltage (L1-L2) (V)</label>
+                                    <input type="number" id="css-voltage-l1l2" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                                </div>
+                                <div>
+                                    <label for="css-voltage-l2l3" class="block text-gray-700 text-sm font-medium mb-1">Voltage (L2-L3) (V)</label>
+                                    <input type="number" id="css-voltage-l2l3" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                                </div>
+                                <div>
+                                    <label for="css-voltage-l3l1" class="block text-gray-700 text-sm font-medium mb-1">Voltage (L3-L1) (V)</label>
+                                    <input type="number" id="css-voltage-l3l1" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div>
+                                    <label for="css-current-r" class="block text-gray-700 text-sm font-medium mb-1">Current (R) (A)</label>
+                                    <input type="number" id="css-current-r" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                                </div>
+                                <div>
+                                    <label for="css-current-y" class="block text-gray-700 text-sm font-medium mb-1">Current (Y) (A)</label>
+                                    <input type="number" id="css-current-y" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                                </div>
+                                <div>
+                                    <label for="css-current-b" class="block text-gray-700 text-sm font-medium mb-1">Current (B) (A)</label>
+                                    <input type="number" id="css-current-b" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                                </div>
+                            </div>
+                             <!-- New fields for Transformer Winding Temperatures -->
+                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div>
+                                    <label for="css-temp-ph1" class="block text-gray-700 text-sm font-medium mb-1">Transformer Winding Temp (Ph1) (°C)</label>
+                                    <input type="number" id="css-temp-ph1" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                                </div>
+                                <div>
+                                    <label for="css-temp-ph2" class="block text-gray-700 text-sm font-medium mb-1">Transformer Winding Temp (Ph2) (°C)</label>
+                                    <input type="number" id="css-temp-ph2" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                                </div>
+                                <div>
+                                    <label for="css-temp-ph3" class="block text-gray-700 text-sm font-medium mb-1">Transformer Winding Temp (Ph3) (°C)</label>
+                                    <input type="number" id="css-temp-ph3" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div>
+                                <label for="css-frequency" class="block text-gray-700 text-sm font-medium mb-1">Frequency (Hz)</label>
+                                <input type="number" id="css-frequency" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                             <div>
+                                <label for="css-energy" class="block text-gray-700 text-sm font-medium mb-1">Energy Exported (MWh)</label>
+                                <input type="number" id="css-energy" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="css-remarks" class="block text-gray-700 text-sm font-medium mb-1">Remarks</label>
+                                <textarea id="css-remarks" rows="3" class="w-full p-2 rounded-lg border border-gray-300"></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200 shadow-md">Submit CSS Data</button>
+                        </div>
+                    </form>
+                    <p id="message-css-data-entry" class="text-green-500 mt-4 hidden">CSS data submitted successfully!</p>
+                </div>
+
+                <!-- Battery Voltage Data Entry Form -->
+                <div id="battery-voltage-form" class="content-section hidden">
+                    <h2 class="text-xl font-bold text-gray-700 mb-4">Battery Voltage Data Log</h2>
+                    <form id="bv-data-form" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div>
+                                <label for="bv-date" class="block text-gray-700 font-semibold mb-2">Date</label>
+                                <input type="date" id="bv-date" class="w-full p-3 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="bv-time" class="block text-gray-700 font-semibold mb-2">Time</label>
+                                <select id="bv-time" class="w-full p-3 rounded-lg border border-gray-300">
+                                    <option value="06:00">06:00h</option>
+                                    <option value="12:00">12:00h</option>
+                                    <option value="24:00">24:00h</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Dynamically generated DG battery voltage inputs -->
+                        <div class="mb-6">
+                            <h3 class="text-lg font-bold text-gray-600 mb-4">DG Battery Voltages</h3>
+                            <div id="dg-battery-inputs" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <!-- DG battery voltage inputs will be injected here by JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <!-- Dynamically generated CSS battery voltage inputs -->
+                        <div class="mb-6">
+                            <h3 class="text-lg font-bold text-gray-600 mb-4">CSS Battery Voltages</h3>
+                            <div id="css-battery-inputs" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <!-- CSS battery voltage inputs will be injected here by JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <!-- New input field for Grid Breaker Monitoring Unit -->
+                        <div class="mb-6">
+                            <h3 class="text-lg font-bold text-gray-600 mb-4">Grid Breaker Battery Voltage</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="bv-grid-breaker" class="block text-gray-700 text-sm font-medium mb-1">Grid Breaker Monitoring Unit Battery Voltage (V)</label>
+                                    <input type="number" id="bv-grid-breaker" name="grid-breaker-voltage" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="bv-remarks" class="block text-gray-700 text-sm font-medium mb-1">Remarks</label>
+                            <textarea id="bv-remarks" rows="3" class="w-full p-2 rounded-lg border border-gray-300"></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200 shadow-md">Submit Battery Voltage</button>
+                    </form>
+                    <p id="message-bv-data-entry" class="text-green-500 mt-4 hidden">Battery voltage data submitted successfully!</p>
+                </div>
+                
+                <!-- Reports Page -->
+                <div id="reports-page" class="content-section hidden">
+                    <h2 class="text-xl font-bold text-gray-700 mb-4">Generate Reports</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="report-type" class="block text-gray-700 font-semibold mb-2">Report Type</label>
+                            <select id="report-type" class="w-full p-3 rounded-lg border border-gray-300">
+                                <option value="daily">Daily</option>
+                                <option value="monthly">Monthly</option>
+                                <option value="yearly">Yearly</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="report-date" class="block text-gray-700 font-semibold mb-2">Select Date/Month/Year</label>
+                            <input type="date" id="report-date" class="w-full p-3 rounded-lg border border-gray-300">
+                        </div>
+                        <button id="generate-report-button" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200 shadow-md">Generate Report</button>
+                    </div>
+                    
+                    <div id="report-output" class="mt-8 hidden">
+                        <h3 class="text-lg font-bold text-gray-600 mb-2">Report Results</h3>
+                        <p id="report-text" class="text-gray-500 italic mb-4">No report data to display.</p>
+                        <table class="min-w-full bg-white rounded-lg shadow-md border border-gray-200">
+                            <thead class="bg-gray-100">
+                                <tr class="border-b border-gray-200">
+                                    <th class="p-3 text-left text-sm font-semibold text-gray-600">Date</th>
+                                    <th class="p-3 text-left text-sm font-semibold text-gray-600">Unit</th>
+                                    <th class="p-3 text-left text-sm font-semibold text-gray-600">Load (kW)</th>
+                                    <th class="p-3 text-left text-sm font-semibold text-gray-600">Running Hrs</th>
+                                    <th class="p-3 text-left text-sm font-semibold text-gray-600">Energy Gen. (MWh)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="report-table-body" class="divide-y divide-gray-200">
+                                <!-- Report data rows will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- User Management Page (Admin Only) -->
+                <div id="user-management-page" class="content-section hidden">
+                    <h2 class="text-xl font-bold text-gray-700 mb-4">User Management</h2>
+                    
+                    <!-- Add User Form -->
+                    <div class="mb-6 border p-4 rounded-lg bg-gray-50">
+                        <h3 class="text-lg font-bold text-gray-700 mb-2">Add New User</h3>
+                        <form id="add-user-form" class="space-y-4">
+                            <div>
+                                <label for="new-username" class="block text-gray-700 text-sm font-medium mb-1">Username</label>
+                                <input type="text" id="new-username" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="new-password" class="block text-gray-700 text-sm font-medium mb-1">Password</label>
+                                <input type="password" id="new-password" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="new-user-role" class="block text-gray-700 text-sm font-medium mb-1">Role</label>
+                                <select id="new-user-role" class="w-full p-2 rounded-lg border border-gray-300">
+                                    <option value="user">User</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition duration-200 shadow-sm">Add User</button>
+                        </form>
+                        <p id="message-user-add" class="text-green-500 mt-2 hidden">User added successfully!</p>
+                    </div>
+
+                    <!-- User List Table -->
+                    <h3 class="text-lg font-bold text-gray-700 mb-2">Current Users</h3>
+                    <table class="min-w-full bg-white rounded-lg shadow-md border border-gray-200">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="p-3 text-left text-sm font-semibold text-gray-600">Username</th>
+                                <th class="p-3 text-left text-sm font-semibold text-gray-600">Role</th>
+                                <th class="p-3 text-left text-sm font-semibold text-gray-600">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-table-body" class="divide-y divide-gray-200">
+                            <!-- User data rows will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript for app logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- DOM Element References ---
+            const loginPage = document.getElementById('login-page');
+            const dashboardPage = document.getElementById('dashboard-page');
+            const loginButton = document.getElementById('login-button');
+            const logoutButton = document.getElementById('logout-button');
+            const errorMessage = document.getElementById('error-message');
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const userGreeting = document.getElementById('user-greeting');
+            
+            const navButtons = document.querySelectorAll('.nav-button');
+            const contentSections = document.querySelectorAll('.content-section');
+            const dgDataEntryForm = document.getElementById('dg-data-entry-form');
+            const cssDataEntryForm = document.getElementById('css-data-entry-form');
+            const batteryVoltageForm = document.getElementById('battery-voltage-form');
+            const reportsPage = document.getElementById('reports-page');
+            const userManagementPage = document.getElementById('user-management-page');
+            
+            const dgGeneratorSelect = document.getElementById('dg-generator-select');
+            const cssStationSelect = document.getElementById('css-station-select');
+            const dgBatteryInputsContainer = document.getElementById('dg-battery-inputs');
+            const cssBatteryInputsContainer = document.getElementById('css-battery-inputs');
+            const dgDateInput = document.getElementById('dg-date');
+            const dgTimeInput = document.getElementById('dg-time');
+            const cssDateInput = document.getElementById('css-date');
+            const cssTimeInput = document.getElementById('css-time');
+
+
+            const reportTypeSelect = document.getElementById('report-type');
+            const reportDateInput = document.getElementById('report-date');
+            const generateReportButton = document.getElementById('generate-report-button');
+            const reportOutput = document.getElementById('report-output');
+            const reportTableBody = document.getElementById('report-table-body');
+            const reportText = document.getElementById('report-text');
+
+            const addUserForm = document.getElementById('add-user-form');
+            const newUserRoleSelect = document.getElementById('new-user-role');
+            const userTableBody = document.getElementById('user-table-body');
+            const messageUserAdd = document.getElementById('message-user-add');
+            const dgDataForm = document.getElementById('dg-data-form');
+            const cssDataForm = document.getElementById('css-data-form');
+            const bvDataForm = document.getElementById('bv-data-form');
+            const messageDgDataEntry = document.getElementById('message-dg-data-entry');
+            const messageCssDataEntry = document.getElementById('message-css-data-entry');
+            const messageBvDataEntry = document.getElementById('message-bv-data-entry');
+            
+            // --- Mock Data and State ---
+            let currentUser = null;
+            
+            // Mock user data for simulation (in a real app, this would be a database)
+            const mockUsers = [
+                { username: 'admin', password: 'password123', role: 'admin' },
+                { username: 'user1', password: 'password123', role: 'user' },
+                { username: 'user2', password: 'password123', role: 'user' }
+            ];
+
+            // Generator numbers as requested by the user, now with DG 09 and DG 10 added back
+            const dgNumbers = [
+                ...Array.from({ length: 16 }, (_, i) => `DG ${String(i + 3).padStart(2, '0')}`), // DG 03 to DG 18
+                ...Array.from({ length: 4 }, (_, i) => `DG ${String(i + 21).padStart(2, '0')}`), // DG 21 to DG 24
+                ...Array.from({ length: 10 }, (_, i) => `DG ${String(i + 35).padStart(2, '0')}`)  // DG 35 to DG 44
+            ];
+            
+            // Containerized Sub Station numbers
+            const cssNumbers = [
+                ...Array.from({ length: 8 }, (_, i) => `CSS ${String(i + 2).padStart(2, '0')}`), // CSS 02 to CSS 09
+                'CSS 11', 'CSS 12',
+                ...Array.from({ length: 5 }, (_, i) => `CSS ${String(i + 18).padStart(2, '0')}`) // CSS 18 to CSS 22
+            ];
+
+            // Mock data for reports
+            const mockData = [
+                { date: '2025-08-20', unit: 'DG 03', type: 'DG', load: 150, runningHours: 10, energyGenerated: 1.5 },
+                { date: '2025-08-20', unit: 'DG 12', type: 'DG', load: 180, runningHours: 12, energyGenerated: 1.8 },
+                { date: '2025-08-21', unit: 'CSS 05', type: 'CSS', load: 120, runningHours: 8, energyGenerated: 1.0 },
+                { date: '2025-08-21', unit: 'DG 21', type: 'DG', load: 160, runningHours: 11, energyGenerated: 1.6 },
+                { date: '2025-08-22', unit: 'DG 35', type: 'DG', load: 190, runningHours: 13, energyGenerated: 1.9 },
+                { date: '2025-08-22', unit: 'CSS 18', type: 'CSS', load: 140, runningHours: 9, energyGenerated: 1.2 },
+                { date: '2025-08-22', unit: 'DG 44', type: 'DG', load: 175, runningHours: 12.5, energyGenerated: 1.75 },
+            ];
+
+            // --- Functions ---
+            function login(username, password) {
+                const user = mockUsers.find(u => u.username === username && u.password === password);
+                if (user) {
+                    currentUser = user;
+                    errorMessage.classList.add('hidden');
+                    showDashboard();
+                } else {
+                    errorMessage.classList.remove('hidden');
+                }
+            }
+
+            function showDashboard() {
+                loginPage.classList.add('hidden');
+                dashboardPage.classList.remove('hidden');
+                userGreeting.textContent = `Hello, ${currentUser.username}!`;
+                
+                // Show/hide admin-only features
+                const adminElements = document.querySelectorAll('.admin-only');
+                if (currentUser.role === 'admin') {
+                    adminElements.forEach(el => el.classList.remove('hidden'));
+                } else {
+                    adminElements.forEach(el => el.classList.add('hidden'));
+                }
+                
+                showContent('dg-data-entry-form');
+            }
+
+            function showContent(sectionId) {
+                contentSections.forEach(section => {
+                    section.classList.add('hidden');
+                });
+                document.getElementById(sectionId).classList.remove('hidden');
+
+                navButtons.forEach(button => {
+                    button.classList.remove('nav-button-active');
+                    button.classList.add('nav-button-inactive');
+                });
+
+                const activeButton = document.getElementById(`nav-${sectionId.replace('-data-entry-form', '-data').replace('-page', '').replace('-voltage-form', '-voltage')}`);
+                if (activeButton) {
+                     activeButton.classList.remove('nav-button-inactive');
+                     activeButton.classList.add('nav-button-active');
+                }
+            }
+
+            function populateDgDropdown() {
+                dgNumbers.forEach(number => {
+                    const option = document.createElement('option');
+                    option.value = number;
+                    option.textContent = number;
+                    dgGeneratorSelect.appendChild(option);
+                });
+            }
+            
+            function populateCssDropdown() {
+                cssNumbers.forEach(number => {
+                    const option = document.createElement('option');
+                    option.value = number;
+                    option.textContent = number;
+                    cssStationSelect.appendChild(option);
+                });
+            }
+
+            // Function to dynamically generate DG battery voltage input fields
+            function populateDgBatteryInputs() {
+                dgBatteryInputsContainer.innerHTML = ''; // Clear previous inputs
+                dgNumbers.forEach(number => {
+                    const fieldContainer = document.createElement('div');
+                    fieldContainer.innerHTML = `
+                        <label for="bv-${number}" class="block text-gray-700 text-sm font-medium mb-1">${number} Battery Voltage (V)</label>
+                        <input type="number" id="bv-${number}" name="${number.replace(' ', '-').toLowerCase()}-voltage" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                    `;
+                    dgBatteryInputsContainer.appendChild(fieldContainer);
+                });
+            }
+
+            // Function to dynamically generate CSS battery voltage input fields
+            function populateCssBatteryInputs() {
+                cssBatteryInputsContainer.innerHTML = ''; // Clear previous inputs
+                cssNumbers.forEach(number => {
+                    const fieldContainer = document.createElement('div');
+                    fieldContainer.innerHTML = `
+                        <label for="bv-${number}" class="block text-gray-700 text-sm font-medium mb-1">${number} Battery Voltage (V)</label>
+                        <input type="number" id="bv-${number}" name="${number.replace(' ', '-').toLowerCase()}-voltage" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                    `;
+                    cssBatteryInputsContainer.appendChild(fieldContainer);
+                });
+            }
+
+            function generateReport() {
+                const reportType = reportTypeSelect.value;
+                const reportDate = reportDateInput.value;
+
+                if (!reportDate) {
+                    reportOutput.classList.remove('hidden');
+                    reportText.textContent = 'Please select a date.';
+                    reportTableBody.innerHTML = '';
+                    return;
+                }
+
+                const filteredData = mockData.filter(data => {
+                    if (reportType === 'daily') {
+                        return data.date === reportDate;
+                    } else if (reportType === 'monthly') {
+                        return data.date.startsWith(reportDate.substring(0, 7)); // 'YYYY-MM'
+                    } else if (reportType === 'yearly') {
+                        return data.date.startsWith(reportDate.substring(0, 4)); // 'YYYY'
+                    }
+                });
+
+                reportOutput.classList.remove('hidden');
+                if (filteredData.length > 0) {
+                    reportText.classList.add('hidden');
+                    reportTableBody.innerHTML = '';
+                    filteredData.forEach(item => {
+                        const row = document.createElement('tr');
+                        row.classList.add('hover:bg-gray-50');
+                        row.innerHTML = `
+                            <td class="p-3 text-sm text-gray-700">${item.date}</td>
+                            <td class="p-3 text-sm text-gray-700">${item.unit}</td>
+                            <td class="p-3 text-sm text-gray-700">${item.load}</td>
+                            <td class="p-3 text-sm text-gray-700">${item.runningHours}</td>
+                            <td class="p-3 text-sm text-gray-700">${item.energyGenerated}</td>
+                        `;
+                        reportTableBody.appendChild(row);
+                    });
+                } else {
+                    reportText.classList.remove('hidden');
+                    reportText.textContent = `No data found for the selected ${reportType} report.`;
+                    reportTableBody.innerHTML = '';
+                }
+            }
+
+            function renderUserTable() {
+                userTableBody.innerHTML = '';
+                mockUsers.forEach((user, index) => {
+                    const row = document.createElement('tr');
+                    row.classList.add('hover:bg-gray-50');
+                    row.innerHTML = `
+                        <td class="p-3 text-sm text-gray-700">${user.username}</td>
+                        <td class="p-3 text-sm text-gray-700">${user.role}</td>
+                        <td class="p-3">
+                            <button class="delete-user-button bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded-lg text-sm transition duration-200 shadow-sm" data-index="${index}">Delete</button>
+                        </td>
+                    `;
+                    userTableBody.appendChild(row);
+                });
+            }
+
+            function deleteUser(index) {
+                // Prevent admin from deleting themselves
+                if (mockUsers[index].username === currentUser.username) {
+                    // Use a custom message box instead of alert
+                    alert("You cannot delete the currently logged in user.");
+                    return;
+                }
+                
+                // Use a custom message box instead of confirm
+                if (confirm(`Are you sure you want to delete user "${mockUsers[index].username}"?`)) {
+                    mockUsers.splice(index, 1);
+                    renderUserTable();
+                }
+            }
+            
+            // --- Event Listeners ---
+            loginButton.addEventListener('click', () => {
+                const username = usernameInput.value;
+                const password = passwordInput.value;
+                login(username, password);
+            });
+            
+            logoutButton.addEventListener('click', () => {
+                currentUser = null;
+                loginPage.classList.remove('hidden');
+                dashboardPage.classList.add('hidden');
+                usernameInput.value = '';
+                passwordInput.value = '';
+            });
+
+            navButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const sectionId = e.target.id.replace('nav-', '');
+                    let targetSection = sectionId.includes('data') ? `${sectionId}-entry-form` : `${sectionId}-page`;
+                    if (sectionId.includes('battery-voltage')) {
+                        targetSection = sectionId + '-form';
+                    }
+                    showContent(targetSection);
+                });
+            });
+
+            dgDataForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                // In a real application, you would collect form data and send it to your backend
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData.entries());
+                console.log("Submitting DG data:", data);
+                
+                // Show success message
+                messageDgDataEntry.classList.remove('hidden');
+                setTimeout(() => messageDgDataEntry.classList.add('hidden'), 3000);
+            });
+            
+            cssDataForm.addEventListener('submit', (e) => {
+                 e.preventDefault();
+                 const formData = new FormData(e.target);
+                 const data = Object.fromEntries(formData.entries());
+                 console.log("Submitting CSS data:", data);
+
+                 messageCssDataEntry.classList.remove('hidden');
+                 setTimeout(() => messageCssDataEntry.classList.add('hidden'), 3000);
+            });
+
+            bvDataForm.addEventListener('submit', (e) => {
+                 e.preventDefault();
+                 const formData = new FormData(e.target);
+                 const data = Object.fromEntries(formData.entries());
+                 console.log("Submitting Battery Voltage data:", data);
+
+                 messageBvDataEntry.classList.remove('hidden');
+                 setTimeout(() => messageBvDataEntry.classList.add('hidden'), 3000);
+            });
+
+
+            generateReportButton.addEventListener('click', generateReport);
+
+            addUserForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const newUser = {
+                    username: document.getElementById('new-username').value,
+                    password: document.getElementById('new-password').value,
+                    role: newUserRoleSelect.value
+                };
+                mockUsers.push(newUser);
+                renderUserTable();
+                addUserForm.reset();
+                messageUserAdd.classList.remove('hidden');
+                setTimeout(() => messageUserAdd.classList.add('hidden'), 3000);
+            });
+
+            // Use event delegation for delete buttons
+            userTableBody.addEventListener('click', (e) => {
+                if (e.target.classList.contains('delete-user-button')) {
+                    const index = e.target.getAttribute('data-index');
+                    deleteUser(index);
+                }
+            });
+
+            // Initial setup
+            populateDgDropdown();
+            populateCssDropdown();
+            populateDgBatteryInputs();
+            populateCssBatteryInputs();
+            renderUserTable();
+
+            // Set current date and time on load
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const hours = String(today.getHours()).padStart(2, '0');
+            const minutes = String(today.getMinutes()).padStart(2, '0');
+            
+            // Initializing date/time fields for convenience
+            const todayStr = `${year}-${month}-${day}`;
+            const timeStr = `${hours}:${minutes}`;
+
+            dgDateInput.value = todayStr;
+            dgTimeInput.value = timeStr;
+            cssDateInput.value = todayStr;
+            cssTimeInput.value = timeStr;
+        });
+    </script>
+</body>
+</html>
