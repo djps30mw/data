@@ -4,21 +4,313 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Power Plant Data App</title>
+    <!-- Tailwind CSS CDN for modern, responsive styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font for a clean look -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #1a202c;
-            color: #e2e8f0;
+            background-color: #f3f4f6;
+        }
+        /* Custom styles for nav buttons */
+        .nav-button-active {
+            background-color: #3b82f6; /* Blue-500 */
+            color: white;
+        }
+        .nav-button-inactive {
+            background-color: #d1d5db; /* Gray-300 */
+            color: #1f2937; /* Gray-800 */
         }
     </style>
 </head>
-<body class="p-4 sm:p-8 flex flex-col items-center min-h-screen">
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
 
-    <!-- Firebase SDKs -->
+    <!-- Global Message Box -->
+    <div id="message-box" class="fixed top-4 right-4 bg-emerald-500 text-white p-4 rounded-xl shadow-xl transition-opacity duration-300 hidden z-50"></div>
+
+    <!-- Main Container -->
+    <div id="app-container" class="bg-white rounded-xl shadow-lg w-full max-w-4xl p-8">
+        
+        <!-- Authentication Section (hidden when logged in) -->
+        <div id="auth-section" class="space-y-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Power Plant Data App</h1>
+            <div class="bg-gray-100 p-6 rounded-2xl shadow-lg">
+                <h2 class="text-xl font-bold text-gray-700 mb-4 text-center">Login</h2>
+                <form id="login-form" class="space-y-4">
+                    <input type="email" id="login-email" placeholder="Email" required class="w-full px-4 py-3 bg-gray-200 text-gray-800 border-none rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <input type="password" id="login-password" placeholder="Password" required class="w-full px-4 py-3 bg-gray-200 text-gray-800 border-none rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <button type="submit" class="w-full bg-blue-500 text-white font-bold py-3 px-4 rounded-xl hover:bg-blue-600 transition-colors duration-200">Log In</button>
+                </form>
+            </div>
+            
+            <div class="bg-gray-100 p-6 rounded-2xl shadow-lg">
+                <h2 class="text-xl font-bold text-gray-700 mb-4 text-center">Sign Up</h2>
+                <form id="signup-form" class="space-y-4">
+                    <input type="email" id="signup-email" placeholder="Email" required class="w-full px-4 py-3 bg-gray-200 text-gray-800 border-none rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <input type="password" id="signup-password" placeholder="Password" required class="w-full px-4 py-3 bg-gray-200 text-gray-800 border-none rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <button type="submit" class="w-full bg-green-500 text-white font-bold py-3 px-4 rounded-xl hover:bg-green-600 transition-colors duration-200">Sign Up</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Dashboard Page (after login) -->
+        <div id="dashboard-page" class="hidden">
+            <header class="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
+                <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
+                <div class="flex items-center space-x-4">
+                    <span id="user-id-display" class="text-lg text-gray-600"></span>
+                    <button id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 shadow-sm">Logout</button>
+                </div>
+            </header>
+            
+            <!-- Navigation -->
+            <div class="flex flex-wrap space-x-2 md:space-x-4 mb-8">
+                <button id="nav-dg-data-entry" class="nav-button nav-button-active px-4 py-2 rounded-lg transition duration-200 shadow-sm">DG Data Entry</button>
+                <button id="nav-css-data-entry" class="nav-button nav-button-inactive px-4 py-2 rounded-lg transition duration-200 shadow-sm">CSS Data Entry</button>
+                <button id="nav-battery-voltage" class="nav-button nav-button-inactive px-4 py-2 rounded-lg transition duration-200 shadow-sm">Battery Voltage</button>
+            </div>
+
+            <!-- Content Areas -->
+            <div id="content-area">
+                <!-- DG Data Entry Form -->
+                <div id="dg-data-entry-form" class="content-section">
+                    <h2 class="text-xl font-bold text-gray-700 mb-4">Diesel Generator Data Log</h2>
+                    <form id="dg-data-form" class="space-y-4">
+                        <!-- Date and Time fields -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="dg-date" class="block font-semibold mb-2 text-gray-700">Date</label>
+                                <input type="date" id="dg-date" class="w-full p-3 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="dg-time" class="block font-semibold mb-2 text-gray-700">Time</label>
+                                <input type="time" id="dg-time" class="w-full p-3 rounded-lg border border-gray-300">
+                            </div>
+                        </div>
+                        <!-- Generator Selection -->
+                        <div>
+                            <label for="dg-generator-select" class="block font-semibold mb-2 text-gray-700">Generator Number</label>
+                            <select id="dg-generator-select" class="w-full p-3 rounded-lg border border-gray-300">
+                                <!-- Options populated by JavaScript -->
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div>
+                                <label for="dg-load" class="block text-gray-700 text-sm font-medium mb-1">Load (kW)</label>
+                                <input type="number" id="dg-load" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="dg-voltage" class="block text-gray-700 text-sm font-medium mb-1">Voltage (V)</label>
+                                <input type="number" id="dg-voltage" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="dg-current" class="block text-gray-700 text-sm font-medium mb-1">Current (A)</label>
+                                <input type="number" id="dg-current" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="dg-frequency" class="block text-gray-700 text-sm font-medium mb-1">Frequency (Hz)</label>
+                                <input type="number" id="dg-frequency" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="dg-power-factor" class="block text-gray-700 text-sm font-medium mb-1">Power Factor</label>
+                                <input type="number" id="dg-power-factor" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="dg-energy" class="block text-gray-700 text-sm font-medium mb-1">Energy Generated (kWh)</label>
+                                <input type="number" id="dg-energy" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="dg-running-hours" class="block text-gray-700 text-sm font-medium mb-1">Running Hours</label>
+                                <input type="number" id="dg-running-hours" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="dg-fuel-level" class="block text-gray-700 text-sm font-medium mb-1">Fuel Level (%)</label>
+                                <input type="number" id="dg-fuel-level" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="dg-oil-temp" class="block text-gray-700 text-sm font-medium mb-1">Oil Temp (°C)</label>
+                                <input type="number" id="dg-oil-temp" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="dg-coolant-temp" class="block text-gray-700 text-sm font-medium mb-1">Coolant Temp (°C)</label>
+                                <input type="number" id="dg-coolant-temp" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label for="dg-remarks" class="block text-gray-700 text-sm font-medium mb-1">Remarks</label>
+                                <textarea id="dg-remarks" rows="3" class="w-full p-2 rounded-lg border border-gray-300"></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200 shadow-md">Submit DG Data</button>
+                        </div>
+                    </form>
+                    <p id="message-dg-data-entry" class="text-green-500 mt-4 hidden">DG data submitted successfully!</p>
+                </div>
+                
+                <!-- CSS Data Entry Form -->
+                <div id="css-data-entry-form" class="content-section hidden">
+                    <h2 class="text-xl font-bold text-gray-700 mb-4">Containerized Sub Station Data Log</h2>
+                    <form id="css-data-form" class="space-y-4">
+                        <!-- Date and Time fields -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="css-date" class="block font-semibold mb-2 text-gray-700">Date</label>
+                                <input type="date" id="css-date" class="w-full p-3 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="css-time" class="block font-semibold mb-2 text-gray-700">Time</label>
+                                <input type="time" id="css-time" class="w-full p-3 rounded-lg border border-gray-300">
+                            </div>
+                        </div>
+
+                        <!-- CSS Station Selection -->
+                        <div>
+                            <label for="css-station-select" class="block font-semibold mb-2 text-gray-700">Sub Station Number</label>
+                            <select id="css-station-select" class="w-full p-3 rounded-lg border border-gray-300">
+                                <!-- Options populated by JavaScript -->
+                            </select>
+                        </div>
+                        
+                        <!-- Form fields for CSS, as per the log sheet -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div>
+                                <label for="css-load" class="block text-gray-700 text-sm font-medium mb-1">Load (kW)</label>
+                                <input type="number" id="css-load" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="css-power-factor" class="block text-gray-700 text-sm font-medium mb-1">Power Factor</label>
+                                <input type="number" id="css-power-factor" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div>
+                                    <label for="css-voltage-l1l2" class="block text-gray-700 text-sm font-medium mb-1">Voltage (L1-L2) (V)</label>
+                                    <input type="number" id="css-voltage-l1l2" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                                </div>
+                                <div>
+                                    <label for="css-voltage-l2l3" class="block text-gray-700 text-sm font-medium mb-1">Voltage (L2-L3) (V)</label>
+                                    <input type="number" id="css-voltage-l2l3" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                                </div>
+                                <div>
+                                    <label for="css-voltage-l3l1" class="block text-gray-700 text-sm font-medium mb-1">Voltage (L3-L1) (V)</label>
+                                    <input type="number" id="css-voltage-l3l1" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div>
+                                    <label for="css-current-r" class="block text-gray-700 text-sm font-medium mb-1">Current (R) (A)</label>
+                                    <input type="number" id="css-current-r" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                                </div>
+                                <div>
+                                    <label for="css-current-y" class="block text-gray-700 text-sm font-medium mb-1">Current (Y) (A)</label>
+                                    <input type="number" id="css-current-y" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                                </div>
+                                <div>
+                                    <label for="css-current-b" class="block text-gray-700 text-sm font-medium mb-1">Current (B) (A)</label>
+                                    <input type="number" id="css-current-b" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                                </div>
+                            </div>
+                             <!-- New fields for Transformer Winding Temperatures -->
+                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div>
+                                    <label for="css-temp-ph1" class="block text-gray-700 text-sm font-medium mb-1">Transformer Winding Temp (Ph1) (°C)</label>
+                                    <input type="number" id="css-temp-ph1" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                                </div>
+                                <div>
+                                    <label for="css-temp-ph2" class="block text-gray-700 text-sm font-medium mb-1">Transformer Winding Temp (Ph2) (°C)</label>
+                                    <input type="number" id="css-temp-ph2" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                                </div>
+                                <div>
+                                    <label for="css-temp-ph3" class="block text-gray-700 text-sm font-medium mb-1">Transformer Winding Temp (Ph3) (°C)</label>
+                                    <input type="number" id="css-temp-ph3" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div>
+                                <label for="css-frequency" class="block text-gray-700 text-sm font-medium mb-1">Frequency (Hz)</label>
+                                <input type="number" id="css-frequency" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                             <div>
+                                <label for="css-energy" class="block text-gray-700 text-sm font-medium mb-1">Energy Exported (MWh)</label>
+                                <input type="number" id="css-energy" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="css-remarks" class="block text-gray-700 text-sm font-medium mb-1">Remarks</label>
+                                <textarea id="css-remarks" rows="3" class="w-full p-2 rounded-lg border border-gray-300"></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200 shadow-md">Submit CSS Data</button>
+                        </div>
+                    </form>
+                    <p id="message-css-data-entry" class="text-green-500 mt-4 hidden">CSS data submitted successfully!</p>
+                </div>
+
+                <!-- Battery Voltage Data Entry Form -->
+                <div id="battery-voltage-form" class="content-section hidden">
+                    <h2 class="text-xl font-bold text-gray-700 mb-4">Battery Voltage Data Log</h2>
+                    <form id="bv-data-form" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div>
+                                <label for="bv-date" class="block text-gray-700 font-semibold mb-2">Date</label>
+                                <input type="date" id="bv-date" class="w-full p-3 rounded-lg border border-gray-300">
+                            </div>
+                            <div>
+                                <label for="bv-time" class="block text-gray-700 font-semibold mb-2">Time</label>
+                                <select id="bv-time" class="w-full p-3 rounded-lg border border-gray-300">
+                                    <option value="06:00">06:00h</option>
+                                    <option value="12:00">12:00h</option>
+                                    <option value="24:00">24:00h</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Dynamically generated DG battery voltage inputs -->
+                        <div class="mb-6">
+                            <h3 class="text-lg font-bold text-gray-600 mb-4">DG Battery Voltages</h3>
+                            <div id="dg-battery-inputs" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <!-- DG battery voltage inputs will be injected here by JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <!-- Dynamically generated CSS battery voltage inputs -->
+                        <div class="mb-6">
+                            <h3 class="text-lg font-bold text-gray-600 mb-4">CSS Battery Voltages</h3>
+                            <div id="css-battery-inputs" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <!-- CSS battery voltage inputs will be injected here by JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <!-- New input field for Grid Breaker Monitoring Unit -->
+                        <div class="mb-6">
+                            <h3 class="text-lg font-bold text-gray-600 mb-4">Grid Breaker Battery Voltage</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="bv-grid-breaker" class="block text-gray-700 text-sm font-medium mb-1">Grid Breaker Monitoring Unit Battery Voltage (V)</label>
+                                    <input type="number" id="bv-grid-breaker" name="grid-breaker-voltage" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="bv-remarks" class="block text-gray-700 text-sm font-medium mb-1">Remarks</label>
+                            <textarea id="bv-remarks" rows="3" class="w-full p-2 rounded-lg border border-gray-300"></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200 shadow-md">Submit Battery Voltage</button>
+                    </form>
+                    <p id="message-bv-data-entry" class="text-green-500 mt-4 hidden">Battery voltage data submitted successfully!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript for app logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -37,24 +329,133 @@
         auth = getAuth(app);
         setLogLevel('Debug');
 
-        const authStateChangePromise = new Promise(resolve => {
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    userId = user.uid;
-                    document.getElementById('user-id-display').textContent = `User ID: ${userId}`;
-                    document.getElementById('auth-section').classList.add('hidden');
-                    document.getElementById('app-content').classList.remove('hidden');
-                    console.log("User logged in with UID:", userId);
-                    setupFirestoreListener(userId);
-                } else {
-                    document.getElementById('user-id-display').textContent = 'User ID: N/A';
-                    document.getElementById('auth-section').classList.remove('hidden');
-                    document.getElementById('app-content').classList.add('hidden');
-                    console.log("User logged out.");
-                    clearLogList();
-                }
-                resolve();
+        // --- DOM Element References ---
+        const authSection = document.getElementById('auth-section');
+        const dashboardPage = document.getElementById('dashboard-page');
+        const loginForm = document.getElementById('login-form');
+        const signupForm = document.getElementById('signup-form');
+        const logoutBtn = document.getElementById('logout-btn');
+        const userIdDisplay = document.getElementById('user-id-display');
+        const messageBox = document.getElementById('message-box');
+
+        const navButtons = document.querySelectorAll('.nav-button');
+        const contentSections = document.querySelectorAll('.content-section');
+        const dgDataEntryForm = document.getElementById('dg-data-entry-form');
+        const cssDataEntryForm = document.getElementById('css-data-entry-form');
+        const batteryVoltageForm = document.getElementById('battery-voltage-form');
+        
+        const dgDataForm = document.getElementById('dg-data-form');
+        const cssDataForm = document.getElementById('css-data-form');
+        const bvDataForm = document.getElementById('bv-data-form');
+        
+        const dgGeneratorSelect = document.getElementById('dg-generator-select');
+        const cssStationSelect = document.getElementById('css-station-select');
+        const dgBatteryInputsContainer = document.getElementById('dg-battery-inputs');
+        const cssBatteryInputsContainer = document.getElementById('css-battery-inputs');
+        const dgDateInput = document.getElementById('dg-date');
+        const dgTimeInput = document.getElementById('dg-time');
+        const cssDateInput = document.getElementById('css-date');
+        const cssTimeInput = document.getElementById('css-time');
+        const bvDateInput = document.getElementById('bv-date');
+        const bvTimeInput = document.getElementById('bv-time');
+
+        // --- Mock Data and State ---
+        const dgNumbers = [
+            ...Array.from({ length: 16 }, (_, i) => `DG ${String(i + 3).padStart(2, '0')}`),
+            ...Array.from({ length: 4 }, (_, i) => `DG ${String(i + 21).padStart(2, '0')}`),
+            ...Array.from({ length: 10 }, (_, i) => `DG ${String(i + 35).padStart(2, '0')}`)
+        ];
+        
+        const cssNumbers = [
+            ...Array.from({ length: 8 }, (_, i) => `CSS ${String(i + 2).padStart(2, '0')}`),
+            'CSS 11', 'CSS 12',
+            ...Array.from({ length: 5 }, (_, i) => `CSS ${String(i + 18).padStart(2, '0')}`)
+        ];
+
+        // --- Functions ---
+        function showMessage(message) {
+            messageBox.textContent = message;
+            messageBox.classList.remove('hidden');
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 3000);
+        }
+
+        function showContent(sectionId) {
+            contentSections.forEach(section => {
+                section.classList.add('hidden');
             });
+            document.getElementById(sectionId).classList.remove('hidden');
+
+            navButtons.forEach(button => {
+                button.classList.remove('nav-button-active');
+                button.classList.add('nav-button-inactive');
+            });
+
+            const activeButton = document.getElementById(`nav-${sectionId}`);
+            if (activeButton) {
+                 activeButton.classList.remove('nav-button-inactive');
+                 activeButton.classList.add('nav-button-active');
+            }
+        }
+
+        function populateDgDropdown() {
+            dgNumbers.forEach(number => {
+                const option = document.createElement('option');
+                option.value = number;
+                option.textContent = number;
+                dgGeneratorSelect.appendChild(option);
+            });
+        }
+        
+        function populateCssDropdown() {
+            cssNumbers.forEach(number => {
+                const option = document.createElement('option');
+                option.value = number;
+                option.textContent = number;
+                cssStationSelect.appendChild(option);
+            });
+        }
+
+        function populateDgBatteryInputs() {
+            dgBatteryInputsContainer.innerHTML = '';
+            dgNumbers.forEach(number => {
+                const fieldContainer = document.createElement('div');
+                fieldContainer.innerHTML = `
+                    <label for="bv-${number}" class="block text-gray-700 text-sm font-medium mb-1">${number} Battery Voltage (V)</label>
+                    <input type="number" id="bv-${number}" name="${number.replace(' ', '-').toLowerCase()}-voltage" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                `;
+                dgBatteryInputsContainer.appendChild(fieldContainer);
+            });
+        }
+
+        function populateCssBatteryInputs() {
+            cssBatteryInputsContainer.innerHTML = '';
+            cssNumbers.forEach(number => {
+                const fieldContainer = document.createElement('div');
+                fieldContainer.innerHTML = `
+                    <label for="bv-${number}" class="block text-gray-700 text-sm font-medium mb-1">${number} Battery Voltage (V)</label>
+                    <input type="number" id="bv-${number}" name="${number.replace(' ', '-').toLowerCase()}-voltage" step="any" class="w-full p-2 rounded-lg border border-gray-300">
+                `;
+                cssBatteryInputsContainer.appendChild(fieldContainer);
+            });
+        }
+
+        // --- Event Listeners and Firebase Logic ---
+        
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                userId = user.uid;
+                userIdDisplay.textContent = `User ID: ${userId}`;
+                authSection.classList.add('hidden');
+                dashboardPage.classList.remove('hidden');
+                console.log("User logged in with UID:", userId);
+            } else {
+                userIdDisplay.textContent = 'User ID: N/A';
+                authSection.classList.remove('hidden');
+                dashboardPage.classList.add('hidden');
+                console.log("User logged out.");
+            }
         });
 
         window.addEventListener('load', async () => {
@@ -70,9 +471,26 @@
                 await signInAnonymously(auth);
                 console.log("Signed in anonymously.");
             }
+
+            // Set current date and time on load
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const hours = String(today.getHours()).padStart(2, '0');
+            const minutes = String(today.getMinutes()).padStart(2, '0');
+            
+            const todayStr = `${year}-${month}-${day}`;
+            const timeStr = `${hours}:${minutes}`;
+
+            dgDateInput.value = todayStr;
+            dgTimeInput.value = timeStr;
+            cssDateInput.value = todayStr;
+            cssTimeInput.value = timeStr;
+            bvDateInput.value = todayStr;
         });
 
-        document.getElementById('signup-form').addEventListener('submit', async (e) => {
+        signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('signup-email').value;
             const password = document.getElementById('signup-password').value;
@@ -84,7 +502,7 @@
             }
         });
 
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
@@ -96,7 +514,7 @@
             }
         });
 
-        document.getElementById('logout-btn').addEventListener('click', async () => {
+        logoutBtn.addEventListener('click', async () => {
             try {
                 await signOut(auth);
                 showMessage("Logged out successfully!");
@@ -105,134 +523,72 @@
             }
         });
 
-        document.getElementById('add-log-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const logEntry = {
-                timestamp: new Date().toISOString(),
-                operator: document.getElementById('operator-name').value,
-                reading: document.getElementById('gauge-reading').value,
-                notes: document.getElementById('log-notes').value,
-            };
+        navButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                showContent(e.target.id.replace('nav-', ''));
+            });
+        });
 
-            const collectionPath = `artifacts/${appId}/users/${userId}/log_sheets`;
+        // DG Form Submission
+        dgDataForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            data.timestamp = new Date().toISOString();
+            
+            const collectionPath = `artifacts/${appId}/users/${userId}/dg_logs`;
             
             try {
-                await addDoc(collection(db, collectionPath), logEntry);
-                document.getElementById('operator-name').value = '';
-                document.getElementById('gauge-reading').value = '';
-                document.getElementById('log-notes').value = '';
-                showMessage("Log entry added successfully!");
+                await addDoc(collection(db, collectionPath), data);
+                showMessage("DG data submitted successfully!");
+                dgDataForm.reset();
             } catch (error) {
-                showMessage(`Error adding log entry: ${error.message}`);
+                showMessage(`Error submitting DG data: ${error.message}`);
             }
         });
 
-        function setupFirestoreListener(currentUserId) {
-            const collectionPath = `artifacts/${appId}/users/${currentUserId}/log_sheets`;
-            onSnapshot(collection(db, collectionPath), (snapshot) => {
-                clearLogList();
-                const logs = [];
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    logs.push({ id: doc.id, ...data });
-                });
-                renderLogs(logs);
-            });
-        }
+        // CSS Form Submission
+        cssDataForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            data.timestamp = new Date().toISOString();
+            
+            const collectionPath = `artifacts/${appId}/users/${userId}/css_logs`;
+            
+            try {
+                await addDoc(collection(db, collectionPath), data);
+                showMessage("CSS data submitted successfully!");
+                cssDataForm.reset();
+            } catch (error) {
+                showMessage(`Error submitting CSS data: ${error.message}`);
+            }
+        });
 
-        function renderLogs(logs) {
-            const logList = document.getElementById('log-list');
-            logs.forEach(log => {
-                const li = document.createElement('li');
-                li.className = 'bg-gray-700 p-4 rounded-xl shadow-lg mb-2 flex justify-between items-start space-x-4';
-                
-                const contentDiv = document.createElement('div');
-                contentDiv.className = 'flex-grow';
-                
-                const timestamp = new Date(log.timestamp).toLocaleString();
-                contentDiv.innerHTML = `
-                    <div class="font-semibold text-lg text-emerald-300">Timestamp: ${timestamp}</div>
-                    <div class="text-sm text-gray-400">Operator: ${log.operator}</div>
-                    <div class="text-sm text-gray-400">Gauge Reading: ${log.reading}</div>
-                    <p class="mt-2 text-gray-300">${log.notes}</p>
-                `;
-                li.appendChild(contentDiv);
-                logList.appendChild(li);
-            });
-        }
+        // Battery Voltage Form Submission
+        bvDataForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            data.timestamp = new Date().toISOString();
+            
+            const collectionPath = `artifacts/${appId}/users/${userId}/battery_voltage_logs`;
+            
+            try {
+                await addDoc(collection(db, collectionPath), data);
+                showMessage("Battery voltage data submitted successfully!");
+                bvDataForm.reset();
+            } catch (error) {
+                showMessage(`Error submitting Battery Voltage data: ${error.message}`);
+            }
+        });
 
-        function clearLogList() {
-            const logList = document.getElementById('log-list');
-            logList.innerHTML = '';
-        }
-
-        function showMessage(message) {
-            const messageBox = document.getElementById('message-box');
-            messageBox.textContent = message;
-            messageBox.classList.remove('hidden');
-            setTimeout(() => {
-                messageBox.classList.add('hidden');
-            }, 3000);
-        }
+        // Initial setup
+        populateDgDropdown();
+        populateCssDropdown();
+        populateDgBatteryInputs();
+        populateCssBatteryInputs();
+        showContent('dg-data-entry-form');
     </script>
-
-    <!-- Global Message Box -->
-    <div id="message-box" class="fixed top-4 right-4 bg-emerald-500 text-white p-4 rounded-xl shadow-xl transition-opacity duration-300 hidden z-50"></div>
-
-    <!-- Main Container -->
-    <div class="w-full max-w-lg mx-auto bg-gray-800 p-6 rounded-3xl shadow-2xl">
-
-        <!-- Header -->
-        <h1 class="text-4xl sm:text-5xl font-extrabold text-center text-emerald-400 mb-2">Power Plant</h1>
-        <p class="text-center text-sm sm:text-base text-gray-400 mb-8">Data & Log Sheet</p>
-        <div id="user-id-display" class="text-sm text-center text-gray-500 mb-4">User ID: N/A</div>
-
-        <!-- Authentication Section (hidden when logged in) -->
-        <div id="auth-section" class="space-y-6">
-            <div class="bg-gray-700 p-6 rounded-2xl shadow-lg">
-                <h2 class="text-xl font-bold text-white mb-4 text-center">Login</h2>
-                <form id="login-form" class="space-y-4">
-                    <input type="email" id="login-email" placeholder="Email" required class="w-full px-4 py-3 bg-gray-600 text-white border-none rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400">
-                    <input type="password" id="login-password" placeholder="Password" required class="w-full px-4 py-3 bg-gray-600 text-white border-none rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400">
-                    <button type="submit" class="w-full bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl hover:bg-emerald-600 transition-colors duration-200">Log In</button>
-                </form>
-            </div>
-            
-            <div class="bg-gray-700 p-6 rounded-2xl shadow-lg">
-                <h2 class="text-xl font-bold text-white mb-4 text-center">Sign Up</h2>
-                <form id="signup-form" class="space-y-4">
-                    <input type="email" id="signup-email" placeholder="Email" required class="w-full px-4 py-3 bg-gray-600 text-white border-none rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400">
-                    <input type="password" id="signup-password" placeholder="Password" required class="w-full px-4 py-3 bg-gray-600 text-white border-none rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400">
-                    <button type="submit" class="w-full bg-blue-500 text-white font-bold py-3 px-4 rounded-xl hover:bg-blue-600 transition-colors duration-200">Sign Up</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- App Content (hidden before login) -->
-        <div id="app-content" class="hidden space-y-8">
-            <button id="logout-btn" class="w-full bg-rose-500 text-white font-bold py-3 px-4 rounded-xl hover:bg-rose-600 transition-colors duration-200 mb-6">Log Out</button>
-
-            <!-- New Log Entry Form -->
-            <div class="bg-gray-700 p-6 rounded-2xl shadow-lg">
-                <h2 class="text-xl font-bold text-white mb-4">Add a Log Entry</h2>
-                <form id="add-log-form" class="space-y-4">
-                    <input type="text" id="operator-name" placeholder="Operator Name" required class="w-full px-4 py-3 bg-gray-600 text-white border-none rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400">
-                    <input type="text" id="gauge-reading" placeholder="Gauge Reading" required class="w-full px-4 py-3 bg-gray-600 text-white border-none rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400">
-                    <textarea id="log-notes" placeholder="Notes" rows="4" required class="w-full px-4 py-3 bg-gray-600 text-white border-none rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400"></textarea>
-                    <button type="submit" class="w-full bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl hover:bg-emerald-600 transition-colors duration-200">Add Log</button>
-                </form>
-            </div>
-            
-            <!-- Log Entries List -->
-            <div class="bg-gray-700 p-6 rounded-2xl shadow-lg">
-                <h2 class="text-xl font-bold text-white mb-4">Recent Logs</h2>
-                <ul id="log-list" class="space-y-4">
-                    <!-- Log entries will be rendered here dynamically -->
-                </ul>
-            </div>
-        </div>
-
-    </div>
-
 </body>
 </html>
