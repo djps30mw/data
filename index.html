@@ -31,15 +31,53 @@
     <!-- Global Message Box -->
     <div id="message-box" class="fixed top-4 right-4 bg-emerald-500 text-white p-4 rounded-xl shadow-xl transition-opacity duration-300 hidden z-50"></div>
 
-    <!-- Main Container -->
-    <div id="app-container" class="bg-white rounded-xl shadow-lg w-full max-w-4xl p-8">
+    <!-- Login/Signup Page (visible initially) -->
+    <div id="auth-page" class="bg-white rounded-xl shadow-lg w-full max-w-md p-8">
+        <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">Welcome to Power Plant Data App</h1>
+        <form id="login-form" class="space-y-4">
+            <div>
+                <label for="login-email" class="block font-semibold mb-2 text-gray-700">Email</label>
+                <input type="email" id="login-email" class="w-full p-3 rounded-lg border border-gray-300" placeholder="user@example.com" required>
+            </div>
+            <div>
+                <label for="login-password" class="block font-semibold mb-2 text-gray-700">Password</label>
+                <input type="password" id="login-password" class="w-full p-3 rounded-lg border border-gray-300" placeholder="********" required>
+            </div>
+            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200 shadow-md">Login</button>
+        </form>
+        <div class="text-center mt-4">
+            <button id="show-signup-btn" class="text-blue-500 hover:text-blue-700 transition duration-200">New user? Create an account</button>
+        </div>
+    </div>
+    
+    <!-- Signup Form (hidden initially) -->
+    <div id="signup-form-container" class="bg-white rounded-xl shadow-lg w-full max-w-md p-8 hidden">
+        <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">Create New Account</h1>
+        <form id="signup-form" class="space-y-4">
+            <div>
+                <label for="signup-email" class="block font-semibold mb-2 text-gray-700">Email</label>
+                <input type="email" id="signup-email" class="w-full p-3 rounded-lg border border-gray-300" placeholder="user@example.com" required>
+            </div>
+            <div>
+                <label for="signup-password" class="block font-semibold mb-2 text-gray-700">Password</label>
+                <input type="password" id="signup-password" class="w-full p-3 rounded-lg border border-gray-300" placeholder="********" required>
+            </div>
+            <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200 shadow-md">Sign Up</button>
+        </form>
+        <div class="text-center mt-4">
+            <button id="show-login-btn" class="text-blue-500 hover:text-blue-700 transition duration-200">Already have an account? Log in</button>
+        </div>
+    </div>
+
+    <!-- Main Container (hidden until logged in) -->
+    <div id="app-container" class="bg-white rounded-xl shadow-lg w-full max-w-4xl p-8 hidden">
         
-        <!-- Dashboard Page (visible after auto-login) -->
+        <!-- Dashboard Page -->
         <div id="dashboard-page">
             <header class="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
                 <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
                 <div class="flex items-center space-x-4">
-                    <span id="user-id-display" class="text-sm text-gray-600 truncate" title="Your User ID"></span>
+                    <span id="user-email-display" class="text-sm text-gray-600 truncate" title="Your Email"></span>
                     <button id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 shadow-sm">Logout</button>
                 </div>
             </header>
@@ -50,6 +88,7 @@
                 <button id="nav-css-data-entry-form" class="nav-button nav-button-inactive px-4 py-2 rounded-lg transition duration-200 shadow-sm">CSS Data Entry</button>
                 <button id="nav-battery-voltage-form" class="nav-button nav-button-inactive px-4 py-2 rounded-lg transition duration-200 shadow-sm">Battery Voltage</button>
                 <button id="nav-data-logs-view" class="nav-button nav-button-inactive px-4 py-2 rounded-lg transition duration-200 shadow-sm">Data Logs</button>
+                <button id="nav-user-management-page" class="nav-button nav-button-inactive px-4 py-2 rounded-lg transition duration-200 shadow-sm">User Management</button>
             </div>
 
             <!-- Content Areas -->
@@ -330,6 +369,29 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- User Management Page -->
+                <div id="user-management-page" class="content-section hidden">
+                    <h2 class="text-xl font-bold text-gray-700 mb-4">User Management</h2>
+                    
+                    <div class="p-6 bg-gray-50 rounded-lg shadow-inner mb-6">
+                        <h3 class="text-lg font-bold text-gray-600 mb-4">All Users</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User ID</th>
+                                        <!-- No actions for now, as delete logic is complex for this demo -->
+                                    </tr>
+                                </thead>
+                                <tbody id="user-list-table-body" class="bg-white divide-y divide-gray-200">
+                                    <!-- User data will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -337,16 +399,15 @@
     <!-- JavaScript for app logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, where, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // Use the provided global variables
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-        let db, auth, userId;
+        let db, auth, userId, userEmail;
         let unsubscribeListeners = [];
         let users = {}; // Cache for user profiles
         let allData = []; // Store all data for filtering
@@ -357,9 +418,16 @@
         setLogLevel('Debug');
 
         // --- DOM Element References ---
+        const authPage = document.getElementById('auth-page');
+        const signupFormContainer = document.getElementById('signup-form-container');
+        const loginForm = document.getElementById('login-form');
+        const signupForm = document.getElementById('signup-form');
+        const showSignupBtn = document.getElementById('show-signup-btn');
+        const showLoginBtn = document.getElementById('show-login-btn');
+        const appContainer = document.getElementById('app-container');
         const dashboardPage = document.getElementById('dashboard-page');
         const logoutBtn = document.getElementById('logout-btn');
-        const userIdDisplay = document.getElementById('user-id-display');
+        const userEmailDisplay = document.getElementById('user-email-display');
         const messageBox = document.getElementById('message-box');
 
         const navButtons = document.querySelectorAll('.nav-button');
@@ -368,6 +436,7 @@
         const cssDataEntryForm = document.getElementById('css-data-entry-form');
         const batteryVoltageForm = document.getElementById('battery-voltage-form');
         const dataLogsView = document.getElementById('data-logs-view');
+        const userManagementPage = document.getElementById('user-management-page');
         
         const dgDataForm = document.getElementById('dg-data-form');
         const cssDataForm = document.getElementById('css-data-form');
@@ -384,6 +453,7 @@
         const bvDateInput = document.getElementById('bv-date');
         const bvTimeInput = document.getElementById('bv-time');
         const dataLogTableBody = document.getElementById('data-log-table-body');
+        const userListTableBody = document.getElementById('user-list-table-body');
         const filterEmailInput = document.getElementById('filter-email');
         const filterTypeSelect = document.getElementById('filter-type');
         const filterDateFromInput = document.getElementById('filter-date-from');
@@ -508,10 +578,27 @@
                     tempUsers[doc.id] = doc.data();
                 });
                 users = tempUsers;
+                renderUserList();
                 // After users are loaded, set up data listeners and render data
                 setupDataListeners();
             });
             unsubscribeListeners.push(unsub);
+        }
+
+        function renderUserList() {
+            userListTableBody.innerHTML = '';
+            const userIds = Object.keys(users);
+            userIds.sort();
+            userIds.forEach(uid => {
+                const user = users[uid];
+                const row = document.createElement('tr');
+                row.className = "hover:bg-gray-100 transition-colors duration-100";
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${user.email}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500 truncate" title="${uid}">${uid}</td>
+                `;
+                userListTableBody.appendChild(row);
+            });
         }
 
         function renderFilteredData() {
@@ -522,7 +609,8 @@
 
             const filteredData = allData.filter(item => {
                 // Filter by email
-                const userEmail = users[item.userId]?.email?.toLowerCase() || '';
+                const userProfile = users[item.userId];
+                const userEmail = userProfile ? userProfile.email.toLowerCase() : 'n/a';
                 const emailMatch = userEmail.includes(filterEmail);
                 
                 // Filter by data type
@@ -579,34 +667,32 @@
         
         onAuthStateChanged(auth, async (user) => {
             if (user) {
+                // User is signed in
                 userId = user.uid;
-                userIdDisplay.textContent = `User ID: ${userId}`;
-                console.log("User logged in with UID:", userId);
+                userEmail = user.email;
+                userEmailDisplay.textContent = `Logged in as: ${userEmail}`;
+                authPage.classList.add('hidden');
+                signupFormContainer.classList.add('hidden');
+                appContainer.classList.remove('hidden');
+                console.log("User logged in with UID:", userId, "and email:", userEmail);
                 setupUserListeners(); // Load user profiles first
             } else {
-                userIdDisplay.textContent = 'User ID: N/A';
+                // User is signed out
+                userId = null;
+                userEmail = null;
+                userEmailDisplay.textContent = 'Not logged in';
+                authPage.classList.remove('hidden');
+                appContainer.classList.add('hidden');
                 console.log("User logged out.");
                 // Unsubscribe from listeners on logout
                 unsubscribeListeners.forEach(unsub => unsub());
                 unsubscribeListeners = [];
                 dataLogTableBody.innerHTML = ''; // Clear the table
+                userListTableBody.innerHTML = ''; // Clear user list
             }
         });
 
         window.addEventListener('load', async () => {
-            if (initialAuthToken) {
-                try {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                    console.log("Signed in with custom token.");
-                } catch (error) {
-                    console.error("Error signing in with custom token:", error);
-                    await signInAnonymously(auth);
-                }
-            } else {
-                await signInAnonymously(auth);
-                console.log("Signed in anonymously.");
-            }
-
             // Set current date and time on load
             const today = new Date();
             const year = today.getFullYear();
@@ -623,6 +709,49 @@
             cssDateInput.value = todayStr;
             cssTimeInput.value = timeStr;
             bvDateInput.value = todayStr;
+        });
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = e.target['login-email'].value;
+            const password = e.target['login-password'].value;
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                showMessage("Logged in successfully!");
+            } catch (error) {
+                showMessage(`Error logging in: ${error.message}`);
+                console.error("Login Error:", error);
+            }
+        });
+
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = e.target['signup-email'].value;
+            const password = e.target['signup-password'].value;
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                // Create a user profile in Firestore
+                const userProfileDoc = doc(db, `artifacts/${appId}/public/data/user_profiles/${user.uid}`);
+                await setDoc(userProfileDoc, {
+                    email: user.email,
+                    createdAt: new Date().toISOString()
+                });
+                showMessage("Account created and logged in!");
+            } catch (error) {
+                showMessage(`Error creating account: ${error.message}`);
+                console.error("Signup Error:", error);
+            }
+        });
+
+        showSignupBtn.addEventListener('click', () => {
+            authPage.classList.add('hidden');
+            signupFormContainer.classList.remove('hidden');
+        });
+
+        showLoginBtn.addEventListener('click', () => {
+            signupFormContainer.classList.add('hidden');
+            authPage.classList.remove('hidden');
         });
         
         // Filter the data logs when the user types in the filter input
