@@ -61,16 +61,18 @@
             <header class="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
                 <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
                 <div class="flex items-center space-x-4">
-                    <span id="user-id-display" class="text-lg text-gray-600"></span>
+                    <span id="user-id-display" class="text-sm text-gray-600 truncate" title="Your User ID"></span>
                     <button id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 shadow-sm">Logout</button>
                 </div>
             </header>
             
             <!-- Navigation -->
             <div class="flex flex-wrap space-x-2 md:space-x-4 mb-8">
-                <button id="nav-dg-data-entry" class="nav-button nav-button-active px-4 py-2 rounded-lg transition duration-200 shadow-sm">DG Data Entry</button>
-                <button id="nav-css-data-entry" class="nav-button nav-button-inactive px-4 py-2 rounded-lg transition duration-200 shadow-sm">CSS Data Entry</button>
-                <button id="nav-battery-voltage" class="nav-button nav-button-inactive px-4 py-2 rounded-lg transition duration-200 shadow-sm">Battery Voltage</button>
+                <button id="nav-dg-data-entry-form" class="nav-button nav-button-active px-4 py-2 rounded-lg transition duration-200 shadow-sm">DG Data Entry</button>
+                <button id="nav-css-data-entry-form" class="nav-button nav-button-inactive px-4 py-2 rounded-lg transition duration-200 shadow-sm">CSS Data Entry</button>
+                <button id="nav-battery-voltage-form" class="nav-button nav-button-inactive px-4 py-2 rounded-lg transition duration-200 shadow-sm">Battery Voltage</button>
+                <button id="nav-data-logs-view" class="nav-button nav-button-inactive px-4 py-2 rounded-lg transition duration-200 shadow-sm">Data Logs</button>
+                <button id="nav-user-management-view" class="nav-button nav-button-inactive px-4 py-2 rounded-lg transition duration-200 shadow-sm">User Management</button>
             </div>
 
             <!-- Content Areas -->
@@ -306,6 +308,82 @@
                     </form>
                     <p id="message-bv-data-entry" class="text-green-500 mt-4 hidden">Battery voltage data submitted successfully!</p>
                 </div>
+
+                <!-- Data Logs View -->
+                <div id="data-logs-view" class="content-section hidden">
+                    <h2 class="text-xl font-bold text-gray-700 mb-4">All Data Logs</h2>
+                    <div class="mb-4 space-y-4 md:space-y-0 md:flex md:space-x-4">
+                        <div class="w-full">
+                            <label for="filter-email" class="block font-semibold mb-2 text-gray-700">Filter by User Email</label>
+                            <input type="text" id="filter-email" placeholder="Enter email to filter..." class="w-full p-3 rounded-lg border border-gray-300">
+                        </div>
+                        <div class="w-full">
+                            <label for="filter-type" class="block font-semibold mb-2 text-gray-700">Filter by Data Type</label>
+                            <select id="filter-type" class="w-full p-3 rounded-lg border border-gray-300">
+                                <option value="all">All</option>
+                                <option value="DG">DG</option>
+                                <option value="CSS">CSS</option>
+                                <option value="BATTERY_VOLTAGE">Battery Voltage</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-4 space-y-4 md:space-y-0 md:flex md:space-x-4">
+                        <div class="w-full">
+                            <label for="filter-date-from" class="block font-semibold mb-2 text-gray-700">From Date</label>
+                            <input type="date" id="filter-date-from" class="w-full p-3 rounded-lg border border-gray-300">
+                        </div>
+                        <div class="w-full">
+                            <label for="filter-date-to" class="block font-semibold mb-2 text-gray-700">To Date</label>
+                            <input type="date" id="filter-date-to" class="w-full p-3 rounded-lg border border-gray-300">
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto bg-gray-50 rounded-lg p-4 shadow-inner">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                                </tr>
+                            </thead>
+                            <tbody id="data-log-table-body" class="bg-white divide-y divide-gray-200">
+                                <!-- Data will be populated here by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- User Management View -->
+                <div id="user-management-view" class="content-section hidden">
+                    <h2 class="text-xl font-bold text-gray-700 mb-4">User Management</h2>
+                    <p class="mb-4 text-gray-600">This page lists all registered users. User names are required for collaborative data sharing and are unique to each user.</p>
+
+                    <!-- Add User Form (Admin-only) -->
+                    <div id="add-user-form-container" class="bg-gray-100 p-6 rounded-2xl shadow-lg mb-6 hidden">
+                        <h3 class="text-xl font-bold text-gray-700 mb-4 text-center">Add New User</h3>
+                        <form id="add-user-form" class="space-y-4">
+                            <input type="email" id="add-user-email" placeholder="New User's Email" required class="w-full px-4 py-3 bg-white text-gray-800 border-none rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400">
+                            <input type="password" id="add-user-password" placeholder="Temporary Password" required class="w-full px-4 py-3 bg-white text-gray-800 border-none rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400">
+                            <button type="submit" class="w-full bg-blue-500 text-white font-bold py-3 px-4 rounded-xl hover:bg-blue-600 transition-colors duration-200">Add User</button>
+                        </form>
+                    </div>
+
+                    <div class="overflow-x-auto bg-gray-50 rounded-lg p-4 shadow-inner">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User name</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
+                                </tr>
+                            </thead>
+                            <tbody id="user-table-body" class="bg-white divide-y divide-gray-200">
+                                <!-- User data will be populated here by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -322,7 +400,12 @@
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
+        // Hardcoded admin email for demonstration. In a real-world app, this would be managed more securely.
+        const adminEmails = ["admin@powerplant.com"];
         let db, auth, userId;
+        let unsubscribeListeners = [];
+        let users = {}; // Cache for user profiles
+        let allData = []; // Store all data for filtering
 
         const app = initializeApp(firebaseConfig);
         db = getFirestore(app);
@@ -343,10 +426,14 @@
         const dgDataEntryForm = document.getElementById('dg-data-entry-form');
         const cssDataEntryForm = document.getElementById('css-data-entry-form');
         const batteryVoltageForm = document.getElementById('battery-voltage-form');
+        const dataLogsView = document.getElementById('data-logs-view');
+        const userManagementView = document.getElementById('user-management-view');
         
         const dgDataForm = document.getElementById('dg-data-form');
         const cssDataForm = document.getElementById('css-data-form');
         const bvDataForm = document.getElementById('bv-data-form');
+        const addUserForm = document.getElementById('add-user-form');
+        const addUserFormContainer = document.getElementById('add-user-form-container');
         
         const dgGeneratorSelect = document.getElementById('dg-generator-select');
         const cssStationSelect = document.getElementById('css-station-select');
@@ -358,6 +445,12 @@
         const cssTimeInput = document.getElementById('css-time');
         const bvDateInput = document.getElementById('bv-date');
         const bvTimeInput = document.getElementById('bv-time');
+        const dataLogTableBody = document.getElementById('data-log-table-body');
+        const userTableBody = document.getElementById('user-table-body');
+        const filterEmailInput = document.getElementById('filter-email');
+        const filterTypeSelect = document.getElementById('filter-type');
+        const filterDateFromInput = document.getElementById('filter-date-from');
+        const filterDateToInput = document.getElementById('filter-date-to');
 
         // --- Mock Data and State ---
         const dgNumbers = [
@@ -440,6 +533,126 @@
                 cssBatteryInputsContainer.appendChild(fieldContainer);
             });
         }
+        
+        function setupDataListeners() {
+            // Clear existing listeners to prevent duplicates
+            unsubscribeListeners.forEach(unsub => unsub());
+            unsubscribeListeners = [];
+            allData = [];
+
+            const collections = ['dg_logs', 'css_logs', 'battery_voltage_logs'];
+
+            collections.forEach(colName => {
+                const q = collection(db, `artifacts/${appId}/public/data/${colName}`);
+                const unsub = onSnapshot(q, (snapshot) => {
+                    snapshot.docChanges().forEach(change => {
+                        const data = { id: change.doc.id, ...change.doc.data(), type: colName.replace('_logs', '').toUpperCase() };
+                        const existingIndex = allData.findIndex(item => item.id === data.id);
+
+                        if (change.type === "added" && existingIndex === -1) {
+                            allData.push(data);
+                        } else if (change.type === "modified" && existingIndex !== -1) {
+                            allData[existingIndex] = data;
+                        } else if (change.type === "removed" && existingIndex !== -1) {
+                            allData.splice(existingIndex, 1);
+                        }
+                    });
+                    renderFilteredData();
+                });
+                unsubscribeListeners.push(unsub);
+            });
+        }
+
+        function setupUserListeners() {
+            const q = collection(db, `artifacts/${appId}/public/data/user_profiles`);
+            const unsub = onSnapshot(q, (snapshot) => {
+                const tempUsers = {};
+                snapshot.forEach(doc => {
+                    tempUsers[doc.id] = doc.data();
+                });
+                users = tempUsers;
+                renderUserTable(Object.values(users));
+                // After users are loaded, set up data listeners and render data
+                setupDataListeners();
+            });
+            unsubscribeListeners.push(unsub);
+        }
+
+        function renderFilteredData() {
+            const filterEmail = filterEmailInput.value.toLowerCase().trim();
+            const filterType = filterTypeSelect.value;
+            const filterDateFrom = filterDateFromInput.value;
+            const filterDateTo = filterDateToInput.value;
+
+            const filteredData = allData.filter(item => {
+                // Filter by email
+                const userEmail = users[item.userId]?.email?.toLowerCase() || '';
+                const emailMatch = userEmail.includes(filterEmail);
+                
+                // Filter by data type
+                const typeMatch = filterType === 'all' || item.type === filterType;
+                
+                // Filter by date range
+                const itemDate = new Date(item.timestamp.split('T')[0]); // Get only the date part
+                const fromDate = filterDateFrom ? new Date(filterDateFrom) : null;
+                const toDate = filterDateTo ? new Date(filterDateTo) : null;
+
+                const dateMatch = (!fromDate || itemDate >= fromDate) && (!toDate || itemDate <= toDate);
+                
+                return emailMatch && typeMatch && dateMatch;
+            });
+            renderDataLogs(filteredData);
+        }
+
+        function renderDataLogs(data) {
+            dataLogTableBody.innerHTML = '';
+            // Sort by timestamp in descending order
+            data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            data.forEach(item => {
+                const date = new Date(item.timestamp).toLocaleString();
+                const details = formatDetails(item);
+                const userName = users[item.userId]?.email || item.userId || 'N/A';
+                
+                const row = document.createElement('tr');
+                row.className = "hover:bg-gray-100 transition-colors duration-100";
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.type}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${date}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500">${details}</td>
+                    <td class="px-6 py-4 text-sm text-blue-500 truncate" title="${userName}">${userName}</td>
+                `;
+                dataLogTableBody.appendChild(row);
+            });
+        }
+        
+        function renderUserTable(usersArray) {
+            userTableBody.innerHTML = '';
+            usersArray.forEach(user => {
+                const row = document.createElement('tr');
+                row.className = "hover:bg-gray-100 transition-colors duration-100";
+                const joinedDate = user.joined ? new Date(user.joined).toLocaleString() : 'N/A';
+                row.innerHTML = `
+                    <td class="px-6 py-4 text-sm text-gray-900 truncate" title="User ID: ${user.userId || 'N/A'}">${user.email || 'N/A'}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500">${user.email || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${joinedDate}</td>
+                `;
+                userTableBody.appendChild(row);
+            });
+        }
+
+        function formatDetails(data) {
+            if (data.type === 'DG') {
+                return `Generator: ${data['dg-generator-select']} | Load: ${data['dg-load']} kW | Voltage: ${data['dg-voltage']} V | Current: ${data['dg-current']} A`;
+            } else if (data.type === 'CSS') {
+                return `Station: ${data['css-station-select']} | Load: ${data['css-load']} kW | Power Factor: ${data['css-power-factor']}`;
+            } else if (data.type === 'BATTERY_VOLTAGE') {
+                const dgVoltages = dgNumbers.map(dg => `${dg}: ${data[dg.replace(' ', '-').toLowerCase() + '-voltage'] || 'N/A'} V`).join(', ');
+                const cssVoltages = cssNumbers.map(css => `${css}: ${data[css.replace(' ', '-').toLowerCase() + '-voltage'] || 'N/A'} V`).join(', ');
+                return `DG Voltages: [${dgVoltages}] | CSS Voltages: [${cssVoltages}] | Grid Breaker: ${data['grid-breaker-voltage'] || 'N/A'} V`;
+            }
+            return 'No details available.';
+        }
 
         // --- Event Listeners and Firebase Logic ---
         
@@ -449,12 +662,27 @@
                 userIdDisplay.textContent = `User ID: ${userId}`;
                 authSection.classList.add('hidden');
                 dashboardPage.classList.remove('hidden');
+
+                const userIsAdmin = adminEmails.includes(user.email);
+                if (userIsAdmin) {
+                    addUserFormContainer.classList.remove('hidden');
+                } else {
+                    addUserFormContainer.classList.add('hidden');
+                }
+
                 console.log("User logged in with UID:", userId);
+                setupUserListeners(); // Load user profiles first
             } else {
                 userIdDisplay.textContent = 'User ID: N/A';
                 authSection.classList.remove('hidden');
                 dashboardPage.classList.add('hidden');
                 console.log("User logged out.");
+                // Unsubscribe from listeners on logout
+                unsubscribeListeners.forEach(unsub => unsub());
+                unsubscribeListeners = [];
+                dataLogTableBody.innerHTML = ''; // Clear the table
+                userTableBody.innerHTML = ''; // Clear the table
+                addUserFormContainer.classList.add('hidden');
             }
         });
 
@@ -489,13 +717,26 @@
             cssTimeInput.value = timeStr;
             bvDateInput.value = todayStr;
         });
+        
+        // Filter the data logs when the user types in the filter input
+        filterEmailInput.addEventListener('input', renderFilteredData);
+        filterTypeSelect.addEventListener('change', renderFilteredData);
+        filterDateFromInput.addEventListener('change', renderFilteredData);
+        filterDateToInput.addEventListener('change', renderFilteredData);
 
         signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('signup-email').value;
             const password = document.getElementById('signup-password').value;
             try {
-                await createUserWithEmailAndPassword(auth, email, password);
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                const userProfile = {
+                    userId: user.uid,
+                    email: user.email,
+                    joined: new Date().toISOString()
+                };
+                await setDoc(doc(db, `artifacts/${appId}/public/data/user_profiles`, user.uid), userProfile);
                 showMessage("Account created successfully!");
             } catch (error) {
                 showMessage(`Error creating account: ${error.message}`);
@@ -535,8 +776,9 @@
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData.entries());
             data.timestamp = new Date().toISOString();
+            data.userId = userId;
             
-            const collectionPath = `artifacts/${appId}/users/${userId}/dg_logs`;
+            const collectionPath = `artifacts/${appId}/public/data/dg_logs`;
             
             try {
                 await addDoc(collection(db, collectionPath), data);
@@ -553,8 +795,9 @@
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData.entries());
             data.timestamp = new Date().toISOString();
+            data.userId = userId;
             
-            const collectionPath = `artifacts/${appId}/users/${userId}/css_logs`;
+            const collectionPath = `artifacts/${appId}/public/data/css_logs`;
             
             try {
                 await addDoc(collection(db, collectionPath), data);
@@ -571,8 +814,9 @@
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData.entries());
             data.timestamp = new Date().toISOString();
+            data.userId = userId;
             
-            const collectionPath = `artifacts/${appId}/users/${userId}/battery_voltage_logs`;
+            const collectionPath = `artifacts/${appId}/public/data/battery_voltage_logs`;
             
             try {
                 await addDoc(collection(db, collectionPath), data);
@@ -580,6 +824,27 @@
                 bvDataForm.reset();
             } catch (error) {
                 showMessage(`Error submitting Battery Voltage data: ${error.message}`);
+            }
+        });
+
+        // Admin Add User Form Submission
+        addUserForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('add-user-email').value;
+            const password = document.getElementById('add-user-password').value;
+            try {
+                const newUserCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const newUser = newUserCredential.user;
+                const newUserProfile = {
+                    userId: newUser.uid,
+                    email: newUser.email,
+                    joined: new Date().toISOString()
+                };
+                await setDoc(doc(db, `artifacts/${appId}/public/data/user_profiles`, newUser.uid), newUserProfile);
+                showMessage(`User ${email} added successfully!`);
+                addUserForm.reset();
+            } catch (error) {
+                showMessage(`Error adding user: ${error.message}`);
             }
         });
 
